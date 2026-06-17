@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Calculadora de Câmbio — AD&D 2.5e</title>
+<style>
+  :root{--bg:#15110c;--panel:#241b13;--panel2:#2f2418;--text:#f3e4c2;--muted:#c9ad7b;--accent:#c9973f;--bad:#d46a58;--good:#8fc27a;--line:#4c3925;}
+  *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#100c08,#21170f);color:var(--text);font-family:Georgia,'Times New Roman',serif;}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px;} h1{margin:0 0 8px;font-size:32px;color:#f6d37b;letter-spacing:.5px}.sub{color:var(--muted);margin-bottom:22px;line-height:1.35}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{background:rgba(36,27,19,.95);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  label{display:block;color:#f0cf8a;margin:10px 0 6px;font-weight:bold} select,input{width:100%;padding:10px 12px;border-radius:9px;border:1px solid #6a4d2e;background:#120d09;color:var(--text);font-size:15px} input[type=number]{font-family:Arial,sans-serif}
+  .result{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;min-height:70px}.box small{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}.box strong{font-size:19px;color:#ffe1a1}.full{grid-column:1/-1}.status-ok{color:var(--good)!important}.status-bad{color:var(--bad)!important}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px} th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left} th{color:#f0cf8a}.note{color:var(--muted);font-size:13px;line-height:1.4}.footer{margin-top:18px;color:#b99b68;font-size:13px}
+  button{margin-top:12px;padding:10px 14px;border-radius:10px;border:1px solid #8a632f;background:#4a3218;color:#ffe1a1;cursor:pointer;font-weight:bold} button:hover{background:#5a3c1c}@media(max-width:800px){.grid,.result{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Calculadora de Câmbio — AD&D 2.5e</h1>
+  <div class="sub">Converte cobre, prata, ouro e platina usando taxas de localidade, tipo de estabelecimento e nível social. A taxa representa comissão, risco, liquidez, custo de transporte, conferência e lucro do cambista ou banco.</div>
+  <div class="grid">
+    <div class="card"><h2>Entrada</h2>
+      <label>Local</label><select id="local"></select>
+      <label>Estabelecimento</label><select id="estabelecimento"></select>
+      <label>Nível social do estabelecimento</label><select id="social"></select>
+      <label>Moeda que você tem</label><select id="moedaOrigem"></select>
+      <label>Moeda desejada</label><select id="moedaDestino"></select>
+      <label>Quantidade de moedas a converter</label><input id="quantidade" type="number" min="0" step="1" value="40">
+      <button onclick="calcular()">Calcular câmbio</button>
+      <p class="note">Dica: use números inteiros para moedas físicas. A ferramenta arredonda para baixo a quantidade final de moedas recebidas, pois casas de câmbio não costumam entregar frações de moeda.</p>
+    </div>
+    <div class="card"><h2>Resultado</h2><div class="result">
+      <div class="box"><small>Valor bruto</small><strong id="bruto">—</strong></div>
+      <div class="box"><small>Taxa final</small><strong id="taxaFinal">—</strong></div>
+      <div class="box"><small>Taxa cobrada</small><strong id="taxaCobrada">—</strong></div>
+      <div class="box"><small>Valor líquido</small><strong id="liquido">—</strong></div>
+      <div class="box"><small>Moedas recebidas</small><strong id="recebe">—</strong></div>
+      <div class="box"><small>Resto não convertido</small><strong id="resto">—</strong></div>
+      <div class="box full"><small>Status da operação</small><strong id="status">—</strong><div class="note" id="statusDetalhe"></div></div>
+    </div></div>
+  </div>
+  <div class="grid" style="margin-top:16px">
+    <div class="card"><h2>Tabela de referência</h2><table><thead><tr><th>Moeda</th><th>Código</th><th>Valor em cobres</th></tr></thead><tbody id="moedaTabela"></tbody></table></div>
+    <div class="card"><h2>Lógica de disponibilidade</h2><div class="note"><p><b>Casa de câmbio:</b> rápida, sem conta, ideal para viajantes. Cobra mais caro e tem menor limite de moedas disponíveis.</p><p><b>Banco:</b> mais barato e aceita valores maiores, mas exige registro, confiança, documentos, carta de guilda ou prazo de aprovação.</p><p><b>Locais menores:</b> taxa mais alta por baixa liquidez e necessidade de transportar moedas até centros maiores.</p><p><b>Metrópoles:</b> custo de vida alto, mas câmbio mais justo pela presença de bancos, nobres, guildas e comércio internacional.</p></div></div>
+  </div>
+  <div class="footer">Sistema econômico de Kitto — AD&D 2.5e. Cobre é a unidade-base de cálculo.</div>
+</div>
+<script>
+const locais=[{id:1,nome:"1 — Ermo / isolado",taxa:0.14,limite:25000,tempoBanco:5},{id:2,nome:"2 — Vilarejo",taxa:0.11,limite:50000,tempoBanco:4},{id:3,nome:"3 — Vila",taxa:0.085,limite:100000,tempoBanco:3},{id:4,nome:"4 — Vila grande",taxa:0.065,limite:200000,tempoBanco:2},{id:5,nome:"5 — Cidade pequena",taxa:0.045,limite:500000,tempoBanco:2},{id:6,nome:"6 — Cidade",taxa:0.0325,limite:1000000,tempoBanco:1},{id:7,nome:"7 — Cidade grande",taxa:0.0225,limite:2500000,tempoBanco:1},{id:8,nome:"8 — Metrópole / capital",taxa:0.015,limite:10000000,tempoBanco:1}];
+const estabelecimentos=[{id:1,nome:"1 — Casa de câmbio",taxa:0.035,limiteMult:1,tempo:"No mesmo dia ou em poucas horas"},{id:2,nome:"2 — Banco",taxa:0.0125,limiteMult:5,tempo:"1 a vários dias; pode exigir conta, registro ou aprovação"}];
+const sociais=[{id:1,nome:"1 — Esquálida",ajuste:0.045,limiteMult:0.25},{id:2,nome:"2 — Pobre",ajuste:0.03,limiteMult:0.5},{id:3,nome:"3 — Modesta",ajuste:0.015,limiteMult:1},{id:4,nome:"4 — Confortável",ajuste:0,limiteMult:1.75},{id:5,nome:"5 — Rica",ajuste:-0.0075,limiteMult:3},{id:6,nome:"6 — Aristocrática",ajuste:-0.015,limiteMult:6}];
+const moedas=[{id:1,nome:"1 — Cobre",singular:"cobre",plural:"cobres",valor:1},{id:2,nome:"2 — Prata",singular:"prata",plural:"pratas",valor:100},{id:3,nome:"3 — Ouro",singular:"ouro",plural:"ouros",valor:10000},{id:4,nome:"4 — Platina",singular:"platina",plural:"platinas",valor:1000000}];
+function fillSelect(id,arr){const el=document.getElementById(id);el.innerHTML="";arr.forEach(x=>{const op=document.createElement("option");op.value=x.id;op.textContent=x.nome;el.appendChild(op);});}
+function formatCobres(c){c=Math.floor(c);let pl=Math.floor(c/1000000);c%=1000000;let ou=Math.floor(c/10000);c%=10000;let pr=Math.floor(c/100);c%=100;const parts=[];if(pl)parts.push(pl+" platina"+(pl>1?"s":""));if(ou)parts.push(ou+" ouro"+(ou>1?"s":""));if(pr)parts.push(pr+" prata"+(pr>1?"s":""));if(c||parts.length===0)parts.push(c+" cobre"+(c!==1?"s":""));return parts.join(", ");}
+function byId(arr,id){return arr.find(x=>x.id==id)}
+function direcaoTaxa(origem,destino){if(origem.id<destino.id)return 0.015*(destino.id-origem.id);if(origem.id>destino.id)return 0.01*(origem.id-destino.id);return 0;}
+function calcular(){const loc=byId(locais,+document.getElementById("local").value);const est=byId(estabelecimentos,+document.getElementById("estabelecimento").value);const soc=byId(sociais,+document.getElementById("social").value);const origem=byId(moedas,+document.getElementById("moedaOrigem").value);const destino=byId(moedas,+document.getElementById("moedaDestino").value);const qtd=Math.max(0,Number(document.getElementById("quantidade").value||0));const bruto=qtd*origem.valor;let taxa=loc.taxa+est.taxa+soc.ajuste+direcaoTaxa(origem,destino);taxa=Math.max(0.005,taxa);const cobrada=Math.ceil(bruto*taxa);const liquido=Math.max(0,bruto-cobrada);const recebe=Math.floor(liquido/destino.valor);const resto=liquido-(recebe*destino.valor);const limite=Math.floor(loc.limite*est.limiteMult*soc.limiteMult);document.getElementById("bruto").textContent=formatCobres(bruto);document.getElementById("taxaFinal").textContent=(taxa*100).toFixed(2).replace(".",",")+"%";document.getElementById("taxaCobrada").textContent=formatCobres(cobrada);document.getElementById("liquido").textContent=formatCobres(liquido);document.getElementById("recebe").textContent=recebe+" "+(recebe===1?destino.singular:destino.plural);document.getElementById("resto").textContent=formatCobres(resto);const status=document.getElementById("status");const detalhe=document.getElementById("statusDetalhe");if(bruto>limite){status.textContent="Excede o limite local";status.className="status-bad";detalhe.textContent="Limite estimado desta instituição: "+formatCobres(limite)+". Exija banco maior, carta de crédito, aval de guilda, divisão em várias operações ou alguns dias de espera.";}else{status.textContent="Operação possível";status.className="status-ok";detalhe.textContent="Limite estimado: "+formatCobres(limite)+". Tempo provável: "+(est.id===2?est.tempo+" ("+loc.tempoBanco+" dia(s) como referência local)":est.tempo)+".";}}
+function init(){fillSelect("local",locais);fillSelect("estabelecimento",estabelecimentos);fillSelect("social",sociais);fillSelect("moedaOrigem",moedas);fillSelect("moedaDestino",moedas);document.getElementById("local").value=4;document.getElementById("estabelecimento").value=1;document.getElementById("social").value=3;document.getElementById("moedaOrigem").value=3;document.getElementById("moedaDestino").value=2;document.getElementById("moedaTabela").innerHTML=moedas.map(m=>`<tr><td>${m.nome.split("— ")[1]}</td><td>${m.id}</td><td>${m.valor.toLocaleString("pt-BR")}</td></tr>`).join("");["local","estabelecimento","social","moedaOrigem","moedaDestino","quantidade"].forEach(id=>{document.getElementById(id).addEventListener("input",calcular);document.getElementById(id).addEventListener("change",calcular);});calcular();} init();
+</script>
+</body>
+</html>

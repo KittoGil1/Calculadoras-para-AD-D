@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Banco AD&D 2.5e — Alveshan</title>
+  <style>
+    :root{
+      --bg:#11100d;
+      --panel:#1d1711;
+      --panel2:#251d14;
+      --ink:#f3e4c4;
+      --muted:#bcae91;
+      --gold:#d6a84f;
+      --red:#b5483f;
+      --green:#5f9d6a;
+      --blue:#5f83a8;
+      --line:#4a3722;
+      --dark:#0a0907;
+      --field:#302416;
+      --warn:#d97c3b;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Georgia, 'Times New Roman', serif;
+      background: radial-gradient(circle at top, #2a2118 0, var(--bg) 55%);
+      color:var(--ink);
+      min-height:100vh;
+    }
+    .wrap{max-width:1280px;margin:0 auto;padding:22px}
+    header{
+      border:1px solid var(--line);
+      background:linear-gradient(135deg, #2b2117, #15110d);
+      border-radius:18px;
+      padding:22px;
+      box-shadow:0 18px 40px rgba(0,0,0,.35);
+      margin-bottom:18px;
+    }
+    h1{margin:0 0 8px;font-size:32px;color:var(--gold);letter-spacing:.5px}
+    h2{margin:0 0 14px;font-size:22px;color:var(--gold)}
+    h3{margin:0 0 8px;color:#f1cc7b;font-size:18px}
+    p{color:var(--muted);line-height:1.5;margin:6px 0}
+    .grid{display:grid;gap:14px}
+    .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    @media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr}.wrap{padding:12px}}
+    .card{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, var(--panel), #15110d);
+      border-radius:16px;
+      padding:16px;
+      box-shadow:0 12px 30px rgba(0,0,0,.26);
+    }
+    label{display:block;color:#e8d4ac;font-size:14px;margin:8px 0 4px}
+    input, select, textarea{
+      width:100%;
+      background:var(--field);
+      color:var(--ink);
+      border:1px solid #6a4c2b;
+      border-radius:10px;
+      padding:10px;
+      font-size:15px;
+      outline:none;
+    }
+    input:focus, select:focus, textarea:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(214,168,79,.2)}
+    button{
+      background:linear-gradient(180deg,#9c6a2f,#6f451e);
+      border:1px solid #c49144;
+      color:#fff1d0;
+      border-radius:11px;
+      padding:10px 13px;
+      cursor:pointer;
+      font-weight:bold;
+      font-family: Georgia, 'Times New Roman', serif;
+      transition:.12s transform,.12s filter;
+    }
+    button:hover{filter:brightness(1.12);transform:translateY(-1px)}
+    button:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .danger{background:linear-gradient(180deg,#9b3a31,#61211d);border-color:#c45a50}
+    .safe{background:linear-gradient(180deg,#5f8f61,#365a39);border-color:#79b77b}
+    .blue{background:linear-gradient(180deg,#526f91,#31465d);border-color:#7290b5}
+    .ghost{background:#20170f;border-color:#6a4c2b;color:#e6d0a7}
+    .mini{font-size:12px;padding:6px 8px;border-radius:8px}
+    .status{
+      display:inline-flex;align-items:center;gap:6px;
+      border:1px solid var(--line);padding:4px 8px;border-radius:999px;
+      font-size:12px;margin:2px 4px 2px 0;background:#20170f;color:#e8d4ac;
+    }
+    .ok{border-color:#5f9d6a;color:#9ed5a7}
+    .bad{border-color:#b5483f;color:#e29a92}
+    .wait{border-color:#d6a84f;color:#f0d28a}
+    .info{border-color:#5f83a8;color:#a6c3e0}
+    .muted{color:var(--muted)}
+    .result{
+      background:#120e0a;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;
+    }
+    .account-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+    .account{
+      background:linear-gradient(180deg,#241a12,#15100c);
+      border:1px solid var(--line);border-radius:16px;padding:14px;position:relative;
+    }
+    .account.cancelada{opacity:.62;filter:grayscale(.35)}
+    .coins{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:10px 0}
+    .coin{background:#140f0a;border:1px solid #3d2a18;border-radius:10px;padding:8px;font-size:13px}
+    .coin strong{color:#f0d28a}
+    table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+    th,td{border-bottom:1px solid #3d2a18;padding:8px;text-align:left;vertical-align:top}
+    th{color:#f0d28a;background:#17110c;position:sticky;top:0}
+    .scroll{max-height:360px;overflow:auto;border:1px solid #3d2a18;border-radius:12px}
+    .log{font-size:13px;line-height:1.45;color:#d5c2a1;max-height:320px;overflow:auto;background:#100c08;border:1px solid #3d2a18;border-radius:12px;padding:10px}
+    .log div{border-bottom:1px dotted #3d2a18;padding:5px 0}.log div:last-child{border-bottom:0}
+    .topline{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap}
+    .small{font-size:12px}.big{font-size:20px;color:#f0d28a;font-weight:bold}
+    .sep{height:1px;background:var(--line);margin:12px 0}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Banco AD&amp;D 2.5e — Alveshan</h1>
+    <p>Controle de contas bancárias, depósitos, saques, taxa anual de custódia e estoque extra dos bancos. O sistema não converte moedas automaticamente: cobre, prata, ouro e platina permanecem separados.</p>
+    <div class="btns">
+      <button class="blue" onclick="exportBackup()">Exportar backup</button>
+      <label style="display:inline-block;margin:0"><input type="file" id="importFile" accept="application/json" style="display:none" onchange="importBackup(event)"><button class="blue" onclick="document.getElementById('importFile').click()">Importar backup</button></label>
+      <button class="ghost" onclick="saveState(); toast('Dados salvos.')">Salvar agora</button>
+      <button class="danger" onclick="resetAll()">Zerar app</button>
+    </div>
+  </header>
+
+  <section class="grid g3">
+    <div class="card">
+      <h2>Criar conta</h2>
+      <label>Nome do personagem</label>
+      <input id="newName" placeholder="Ex.: Arthan de Iriador" />
+      <label>Nível social do banco</label>
+      <select id="newBankLevel"></select>
+      <div class="result" id="newBankInfo"></div>
+      <button class="safe" onclick="createAccount()">Criar conta em análise</button>
+      <p class="small muted">Limite: 20 contas não canceladas. Uma conta criada começa em análise e precisa ser ativada pelo mestre após o prazo indicado.</p>
+    </div>
+
+    <div class="card">
+      <h2>Depósito</h2>
+      <label>Conta</label><select id="depositAccount"></select>
+      <label>Moeda</label><select id="depositCoin"></select>
+      <label>Quantidade</label><input id="depositAmount" type="number" min="0" step="0.01" value="0" />
+      <div class="result" id="depositPreview"></div>
+      <button class="safe" onclick="depositMoney()">Depositar</button>
+    </div>
+
+    <div class="card">
+      <h2>Saque</h2>
+      <label>Conta</label><select id="withdrawAccount"></select>
+      <label>Local do saque</label><select id="withdrawLocation"></select>
+      <label>Período de limite</label><select id="withdrawPeriod"></select>
+      <label>Moeda</label><select id="withdrawCoin"></select>
+      <label>Quantidade</label><input id="withdrawAmount" type="number" min="0" step="0.01" value="0" />
+      <div class="result" id="withdrawPreview"></div>
+      <button onclick="withdrawMoney()">Sacar</button>
+    </div>
+  </section>
+
+  <section class="grid g2" style="margin-top:14px">
+    <div class="card">
+      <h2>Taxa anual de custódia</h2>
+      <div class="grid g3">
+        <div><label>Valor fixo</label><input id="annualFeeAmount" type="number" step="0.01" min="0" /></div>
+        <div><label>Moeda da taxa</label><select id="annualFeeCoin"></select></div>
+        <div><label>Conta</label><select id="annualAccount"></select></div>
+      </div>
+      <div class="result" id="annualPreview"></div>
+      <div class="btns">
+        <button onclick="chargeAnnualSelected()">Cobrar 1 ano da conta</button>
+        <button class="danger" onclick="chargeAnnualAll()">Cobrar 1 ano de todas as ativas</button>
+        <button class="safe" onclick="payPendingSelected()">Regularizar taxa pendente</button>
+      </div>
+      <p class="small muted">A taxa anual é igual para todos os níveis sociais de banco. Se não houver saldo suficiente na moeda escolhida, a conta fica com taxa pendente e o saque é bloqueado até regularizar.</p>
+    </div>
+
+    <div class="card">
+      <h2>Cancelar conta</h2>
+      <label>Conta</label><select id="cancelAccount"></select>
+      <label>Destino do saldo restante</label>
+      <select id="cancelMode">
+        <option value="confiscate">Confiscar saldo e distribuir regra bancária</option>
+        <option value="keep">Cancelar sem confiscar saldo registrado</option>
+      </select>
+      <div class="result">
+        <p><strong>Regra de confisco:</strong> 98% entra no estoque extra dos bancos, dividido entre os seis níveis sociais. 2% é rateado entre contas ativas abertas, sem conversão de moeda.</p>
+      </div>
+      <button class="danger" onclick="cancelSelectedAccount()">Cancelar conta selecionada</button>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:14px">
+    <div class="topline">
+      <h2>Contas cadastradas</h2>
+      <div><span class="status info" id="accountCounter"></span></div>
+    </div>
+    <div id="accounts" class="account-grid"></div>
+  </section>
+
+  <section class="grid g2" style="margin-top:14px">
+    <div class="card">
+      <h2>Estoque extra dos bancos</h2>
+      <p class="small muted">Valores acumulados por taxas, custódias e confisco. Isto representa dinheiro adicional disponível na rede bancária por nível social.</p>
+      <div class="scroll"><table id="reserveTable"></table></div>
+    </div>
+    <div class="card">
+      <h2>Registro de operações</h2>
+      <div class="btns"><button class="ghost mini" onclick="clearLog()">Limpar registro</button></div>
+      <div id="log" class="log"></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'adnd25e_banco_v1';
+const COINS = {
+  cobre: {code:1, label:'Cobre', plural:'cobres', value:1},
+  prata: {code:2, label:'Prata', plural:'pratas', value:100},
+  ouro: {code:3, label:'Ouro', plural:'ouros', value:10000},
+  platina: {code:4, label:'Platina', plural:'platinas', value:1000000},
+};
+const COIN_KEYS = ['cobre','prata','ouro','platina'];
+const LOCATIONS = {
+  1:{label:'Ermo / isolado', mult:.10},
+  2:{label:'Vilarejo', mult:.20},
+  3:{label:'Vila', mult:.40},
+  4:{label:'Vila grande', mult:.70},
+  5:{label:'Cidade pequena', mult:1.00},
+  6:{label:'Cidade', mult:1.50},
+  7:{label:'Cidade grande', mult:2.50},
+  8:{label:'Metrópole / capital', mult:4.00},
+};
+const PERIODS = {
+  day:{label:'Diário', mult:.20},
+  week:{label:'Semanal', mult:1.00},
+  month:{label:'Mensal', mult:3.50},
+};
+const BANK_LEVELS = {
+  1:{label:'Esquálido', fee:.035, approval:10, capCP:50000, withdrawCP:5000},
+  2:{label:'Pobre', fee:.028, approval:7, capCP:250000, withdrawCP:25000},
+  3:{label:'Modesto', fee:.020, approval:5, capCP:1000000, withdrawCP:100000},
+  4:{label:'Confortável', fee:.014, approval:3, capCP:10000000, withdrawCP:500000},
+  5:{label:'Rico', fee:.009, approval:2, capCP:100000000, withdrawCP:2000000},
+  6:{label:'Aristocrático', fee:.005, approval:1, capCP:1000000000, withdrawCP:10000000},
+};
+let state = defaultState();
+
+function defaultBalances(){return {cobre:0,prata:0,ouro:0,platina:0};}
+function defaultState(){
+  const reserves={};
+  for(const k of Object.keys(BANK_LEVELS)) reserves[k]=defaultBalances();
+  return {accounts:[], reserves, settings:{annualFeeAmount:5, annualFeeCoin:'prata'}, log:[]};
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ state = {...defaultState(), ...JSON.parse(raw)}; }
+  }catch(e){ console.error(e); state = defaultState(); }
+  for(const k of Object.keys(BANK_LEVELS)) if(!state.reserves[k]) state.reserves[k]=defaultBalances();
+  for(const a of state.accounts){
+    a.balances = {...defaultBalances(), ...(a.balances||{})};
+    a.pendingFees = {...defaultBalances(), ...(a.pendingFees||{})};
+    if(a.taxPending === undefined) a.taxPending=false;
+  }
+}
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function money(n){ return Number(n||0); }
+function round(n){ return Math.round((Number(n)||0)*100)/100; }
+function fmt(n){
+  n = round(n);
+  return n.toLocaleString('pt-BR', {minimumFractionDigits: n%1?2:0, maximumFractionDigits:2});
+}
+function balanceCP(b){ return COIN_KEYS.reduce((s,k)=>s + money(b[k]) * COINS[k].value,0); }
+function formatCP(cp){
+  cp = Math.max(0, Math.floor(cp));
+  const p = Math.floor(cp/COINS.platina.value); cp%=COINS.platina.value;
+  const o = Math.floor(cp/COINS.ouro.value); cp%=COINS.ouro.value;
+  const pr = Math.floor(cp/COINS.prata.value); cp%=COINS.prata.value;
+  const c = cp;
+  const parts=[];
+  if(p) parts.push(`${fmt(p)} PP`); if(o) parts.push(`${fmt(o)} PO`); if(pr) parts.push(`${fmt(pr)} PR`); if(c||!parts.length) parts.push(`${fmt(c)} PC`);
+  return parts.join(', ');
+}
+function statusLabel(a){
+  if(a.status==='analise') return `<span class="status wait">Em análise</span>`;
+  if(a.status==='cancelada') return `<span class="status bad">Cancelada</span>`;
+  if(a.taxPending) return `<span class="status bad">Ativa — taxa pendente</span>`;
+  return `<span class="status ok">Ativa</span>`;
+}
+function toast(msg){ addLog(msg); render(); }
+function addLog(msg){
+  const stamp = new Date().toLocaleString('pt-BR');
+  state.log.unshift(`[${stamp}] ${msg}`);
+  state.log = state.log.slice(0,160);
+  saveState();
+}
+function clearLog(){ if(confirm('Limpar o registro de operações?')){state.log=[];saveState();render();}}
+function id(){ return 'acc_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function fillSelect(id, options, selected){
+  const el=document.getElementById(id); if(!el) return;
+  el.innerHTML='';
+  for(const op of options){
+    const o=document.createElement('option'); o.value=op.value; o.textContent=op.label; if(String(op.value)===String(selected)) o.selected=true; el.appendChild(o);
+  }
+}
+function accountOptions(filter='any'){
+  let arr = state.accounts.filter(a=>{
+    if(filter==='active') return a.status==='ativa';
+    if(filter==='notCancelled') return a.status!=='cancelada';
+    return true;
+  });
+  if(!arr.length) return [{value:'',label:'— nenhuma conta disponível —'}];
+  return arr.map(a=>({value:a.id,label:`${a.name} — ${BANK_LEVELS[a.bankLevel].label}${a.status==='analise'?' (em análise)':a.status==='cancelada'?' (cancelada)':a.taxPending?' (taxa pendente)':''}`}));
+}
+function getAccount(id){ return state.accounts.find(a=>a.id===id); }
+
+function render(){
+  fillSelect('newBankLevel', Object.entries(BANK_LEVELS).map(([k,v])=>({value:k,label:`${k} — ${v.label}`})), document.getElementById('newBankLevel')?.value || 3);
+  fillSelect('depositAccount', accountOptions('active'), document.getElementById('depositAccount')?.value);
+  fillSelect('withdrawAccount', accountOptions('active'), document.getElementById('withdrawAccount')?.value);
+  fillSelect('annualAccount', accountOptions('active'), document.getElementById('annualAccount')?.value);
+  fillSelect('cancelAccount', accountOptions('notCancelled'), document.getElementById('cancelAccount')?.value);
+  const coinOps = COIN_KEYS.map(k=>({value:k,label:`${COINS[k].code} — ${COINS[k].label}`}));
+  fillSelect('depositCoin', coinOps, document.getElementById('depositCoin')?.value || 'prata');
+  fillSelect('withdrawCoin', coinOps, document.getElementById('withdrawCoin')?.value || 'prata');
+  fillSelect('annualFeeCoin', coinOps, state.settings.annualFeeCoin || 'prata');
+  fillSelect('withdrawLocation', Object.entries(LOCATIONS).map(([k,v])=>({value:k,label:`${k} — ${v.label}`})), document.getElementById('withdrawLocation')?.value || 5);
+  fillSelect('withdrawPeriod', Object.entries(PERIODS).map(([k,v])=>({value:k,label:v.label})), document.getElementById('withdrawPeriod')?.value || 'week');
+  document.getElementById('annualFeeAmount').value = state.settings.annualFeeAmount;
+  renderBankInfo(); renderDepositPreview(); renderWithdrawPreview(); renderAnnualPreview(); renderAccounts(); renderReserves(); renderLog();
+}
+
+function renderBankInfo(){
+  const lvl = document.getElementById('newBankLevel')?.value || 3;
+  const b = BANK_LEVELS[lvl];
+  document.getElementById('newBankInfo').innerHTML = `
+    <p><strong>${b.label}</strong></p>
+    <p>Prazo de aprovação: <strong>${b.approval} dia(s)</strong></p>
+    <p>Taxa de depósito: <strong>${fmt(b.fee*100)}%</strong></p>
+    <p>Capacidade por conta: <strong>${formatCP(b.capCP)}</strong> equivalente</p>
+    <p>Limite semanal base de saque: <strong>${formatCP(b.withdrawCP)}</strong> equivalente antes do modificador de localidade.</p>`;
+}
+function renderDepositPreview(){
+  const acc=getAccount(document.getElementById('depositAccount')?.value);
+  const coin=document.getElementById('depositCoin')?.value || 'prata';
+  const amount=money(document.getElementById('depositAmount')?.value);
+  if(!acc){document.getElementById('depositPreview').innerHTML='<p>Escolha uma conta ativa.</p>'; return;}
+  const b=BANK_LEVELS[acc.bankLevel];
+  const fee=round(amount*b.fee); const net=round(amount-fee);
+  const totalAfter=balanceCP(acc.balances) + net*COINS[coin].value;
+  const ok=totalAfter <= b.capCP;
+  document.getElementById('depositPreview').innerHTML = `
+    <p>Banco: <strong>${b.label}</strong> — taxa de depósito <strong>${fmt(b.fee*100)}%</strong></p>
+    <p>Taxa cobrada: <strong>${fmt(fee)} ${COINS[coin].plural}</strong></p>
+    <p>Valor líquido depositado: <strong>${fmt(net)} ${COINS[coin].plural}</strong></p>
+    <p>Capacidade após depósito: <strong class="${ok?'':'bad'}">${formatCP(totalAfter)} / ${formatCP(b.capCP)}</strong></p>
+    ${ok?'':'<p class="bad">Este depósito excede a capacidade máxima da conta neste nível de banco.</p>'}`;
+}
+function renderWithdrawPreview(){
+  const acc=getAccount(document.getElementById('withdrawAccount')?.value);
+  const loc=LOCATIONS[document.getElementById('withdrawLocation')?.value || 5];
+  const per=PERIODS[document.getElementById('withdrawPeriod')?.value || 'week'];
+  const coin=document.getElementById('withdrawCoin')?.value || 'prata';
+  const amount=money(document.getElementById('withdrawAmount')?.value);
+  if(!acc){document.getElementById('withdrawPreview').innerHTML='<p>Escolha uma conta ativa.</p>'; return;}
+  const b=BANK_LEVELS[acc.bankLevel];
+  const limitCP=b.withdrawCP*loc.mult*per.mult;
+  const reqCP=amount*COINS[coin].value;
+  let notes='';
+  if(acc.taxPending) notes += '<p class="bad">A conta possui taxa anual pendente. Saques ficam bloqueados até regularização.</p>';
+  if(reqCP > limitCP) notes += '<p class="bad">O saque solicitado excede o limite deste banco/local/período.</p>';
+  if(amount > money(acc.balances[coin])) notes += `<p class="bad">Saldo insuficiente em ${COINS[coin].plural}.</p>`;
+  document.getElementById('withdrawPreview').innerHTML = `
+    <p>Banco da conta: <strong>${b.label}</strong></p>
+    <p>Local do saque: <strong>${loc.label}</strong> — modificador ${fmt(loc.mult)}×</p>
+    <p>Limite ${per.label.toLowerCase()}: <strong>${formatCP(limitCP)}</strong> equivalente</p>
+    <p>Solicitado: <strong>${fmt(amount)} ${COINS[coin].plural}</strong> (${formatCP(reqCP)} equivalente)</p>
+    ${notes || '<p class="ok">Saque possível, se o mestre permitir a logística local.</p>'}`;
+}
+function renderAnnualPreview(){
+  const amt=money(document.getElementById('annualFeeAmount')?.value || state.settings.annualFeeAmount);
+  const coin=document.getElementById('annualFeeCoin')?.value || state.settings.annualFeeCoin;
+  const acc=getAccount(document.getElementById('annualAccount')?.value);
+  let s=`<p>Taxa anual atual: <strong>${fmt(amt)} ${COINS[coin].plural}</strong>.</p>`;
+  if(acc){
+    const pend = COIN_KEYS.filter(k=>money(acc.pendingFees[k])>0).map(k=>`${fmt(acc.pendingFees[k])} ${COINS[k].plural}`).join(', ');
+    s += `<p>Conta selecionada: <strong>${acc.name}</strong>. Saldo em ${COINS[coin].plural}: <strong>${fmt(acc.balances[coin])}</strong>.</p>`;
+    if(pend) s += `<p class="bad">Pendências atuais: ${pend}.</p>`;
+  }
+  document.getElementById('annualPreview').innerHTML=s;
+}
+function renderAccounts(){
+  const el=document.getElementById('accounts');
+  const count = state.accounts.filter(a=>a.status!=='cancelada').length;
+  document.getElementById('accountCounter').textContent = `${count}/20 contas não canceladas`;
+  if(!state.accounts.length){el.innerHTML='<p class="muted">Nenhuma conta cadastrada ainda.</p>'; return;}
+  el.innerHTML=state.accounts.map(a=>{
+    const b=BANK_LEVELS[a.bankLevel];
+    const total=balanceCP(a.balances);
+    const pending=COIN_KEYS.filter(k=>money(a.pendingFees[k])>0).map(k=>`${fmt(a.pendingFees[k])} ${COINS[k].plural}`).join(', ');
+    return `<div class="account ${a.status}">
+      <div class="topline"><h3>${escapeHtml(a.name)}</h3>${statusLabel(a)}</div>
+      <p class="small muted">Banco ${a.bankLevel} — ${b.label}. Aprovação estimada: ${b.approval} dia(s).</p>
+      <div class="coins">
+        ${COIN_KEYS.map(k=>`<div class="coin"><strong>${COINS[k].label}</strong><br>${fmt(a.balances[k])}</div>`).join('')}
+      </div>
+      <p>Total equivalente: <strong>${formatCP(total)}</strong></p>
+      <p>Capacidade da conta: <strong>${formatCP(b.capCP)}</strong></p>
+      ${pending?`<p class="bad">Taxa pendente: ${pending}</p>`:''}
+      <div class="btns">
+        ${a.status==='analise'?`<button class="safe mini" onclick="activateAccount('${a.id}')">Ativar conta</button>`:''}
+        ${a.taxPending?`<button class="safe mini" onclick="payPending('${a.id}')">Pagar pendência</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderReserves(){
+  const rows = Object.entries(BANK_LEVELS).map(([lvl,b])=>{
+    const r=state.reserves[lvl]||defaultBalances();
+    return `<tr><td><strong>${lvl} — ${b.label}</strong></td>${COIN_KEYS.map(k=>`<td>${fmt(r[k])}</td>`).join('')}<td>${formatCP(balanceCP(r))}</td></tr>`;
+  }).join('');
+  document.getElementById('reserveTable').innerHTML = `<thead><tr><th>Nível</th><th>Cobre</th><th>Prata</th><th>Ouro</th><th>Platina</th><th>Total equivalente</th></tr></thead><tbody>${rows}</tbody>`;
+}
+function renderLog(){
+  document.getElementById('log').innerHTML = state.log.length ? state.log.map(x=>`<div>${escapeHtml(x)}</div>`).join('') : '<p class="muted">Nenhuma operação registrada.</p>';
+}
+
+function createAccount(){
+  const name=document.getElementById('newName').value.trim();
+  const lvl=document.getElementById('newBankLevel').value;
+  if(!name){alert('Digite o nome do personagem.');return;}
+  const count=state.accounts.filter(a=>a.status!=='cancelada').length;
+  if(count>=20){alert('Limite de 20 contas não canceladas atingido. Cancele uma conta antes de criar outra.');return;}
+  state.accounts.push({id:id(), name, bankLevel:lvl, status:'analise', balances:defaultBalances(), pendingFees:defaultBalances(), taxPending:false, createdAt:new Date().toISOString(), history:[]});
+  document.getElementById('newName').value='';
+  addLog(`Conta de ${name} criada em análise no banco ${BANK_LEVELS[lvl].label}. Prazo estimado: ${BANK_LEVELS[lvl].approval} dia(s).`);
+}
+function activateAccount(id){
+  const a=getAccount(id); if(!a)return; a.status='ativa'; addLog(`Conta de ${a.name} foi ativada.`);
+}
+function depositMoney(){
+  const a=getAccount(document.getElementById('depositAccount').value);
+  const coin=document.getElementById('depositCoin').value;
+  const amount=money(document.getElementById('depositAmount').value);
+  if(!a || a.status!=='ativa'){alert('Escolha uma conta ativa.');return;}
+  if(amount<=0){alert('Digite uma quantidade maior que zero.');return;}
+  const b=BANK_LEVELS[a.bankLevel];
+  const fee=round(amount*b.fee); const net=round(amount-fee);
+  const totalAfter=balanceCP(a.balances) + net*COINS[coin].value;
+  if(totalAfter>b.capCP){alert('Depósito excede a capacidade máxima da conta neste nível de banco.');return;}
+  a.balances[coin]=round(a.balances[coin]+net);
+  state.reserves[a.bankLevel][coin]=round(state.reserves[a.bankLevel][coin]+fee);
+  addLog(`${a.name} depositou ${fmt(amount)} ${COINS[coin].plural}. Taxa: ${fmt(fee)}. Líquido guardado: ${fmt(net)} ${COINS[coin].plural}.`);
+}
+function withdrawMoney(){
+  const a=getAccount(document.getElementById('withdrawAccount').value);
+  const coin=document.getElementById('withdrawCoin').value;
+  const amount=money(document.getElementById('withdrawAmount').value);
+  const loc=LOCATIONS[document.getElementById('withdrawLocation').value];
+  const per=PERIODS[document.getElementById('withdrawPeriod').value];
+  if(!a || a.status!=='ativa'){alert('Escolha uma conta ativa.');return;}
+  if(a.taxPending){alert('Conta com taxa anual pendente. Regularize antes de sacar.');return;}
+  if(amount<=0){alert('Digite uma quantidade maior que zero.');return;}
+  const b=BANK_LEVELS[a.bankLevel];
+  const limitCP=b.withdrawCP*loc.mult*per.mult;
+  const reqCP=amount*COINS[coin].value;
+  if(reqCP>limitCP){alert('Saque excede o limite deste banco/local/período.');return;}
+  if(amount>money(a.balances[coin])){alert('Saldo insuficiente nessa moeda.');return;}
+  a.balances[coin]=round(a.balances[coin]-amount);
+  addLog(`${a.name} sacou ${fmt(amount)} ${COINS[coin].plural} em ${loc.label}, limite ${per.label.toLowerCase()}.`);
+}
+function syncAnnualSettings(){
+  state.settings.annualFeeAmount = money(document.getElementById('annualFeeAmount').value);
+  state.settings.annualFeeCoin = document.getElementById('annualFeeCoin').value;
+  saveState();
+}
+function chargeAnnual(a){
+  const coin=state.settings.annualFeeCoin;
+  let due=round(state.settings.annualFeeAmount);
+  if(!a || a.status!=='ativa') return {ok:false,msg:'Conta não ativa.'};
+  const available=money(a.balances[coin]);
+  const paid=Math.min(available,due);
+  if(paid>0){
+    a.balances[coin]=round(a.balances[coin]-paid);
+    state.reserves[a.bankLevel][coin]=round(state.reserves[a.bankLevel][coin]+paid);
+  }
+  const rest=round(due-paid);
+  if(rest>0){
+    a.pendingFees[coin]=round(a.pendingFees[coin]+rest);
+    a.taxPending=true;
+    return {ok:false,msg:`${a.name}: pagou ${fmt(paid)} e ficou devendo ${fmt(rest)} ${COINS[coin].plural}.`};
+  }
+  return {ok:true,msg:`${a.name}: taxa anual de ${fmt(due)} ${COINS[coin].plural} paga.`};
+}
+function chargeAnnualSelected(){
+  syncAnnualSettings();
+  const a=getAccount(document.getElementById('annualAccount').value);
+  if(!a){alert('Escolha uma conta.');return;}
+  const r=chargeAnnual(a); addLog(r.msg); saveState(); render();
+}
+function chargeAnnualAll(){
+  syncAnnualSettings();
+  if(!confirm('Cobrar taxa anual de todas as contas ativas?')) return;
+  const active=state.accounts.filter(a=>a.status==='ativa');
+  if(!active.length){alert('Não há contas ativas.');return;}
+  for(const a of active){ const r=chargeAnnual(a); addLog(r.msg); }
+  saveState(); render();
+}
+function payPending(id){
+  const a=getAccount(id); if(!a)return;
+  let paidAny=false;
+  for(const coin of COIN_KEYS){
+    let due=money(a.pendingFees[coin]);
+    if(due<=0) continue;
+    const available=money(a.balances[coin]);
+    const paid=Math.min(available,due);
+    if(paid>0){
+      a.balances[coin]=round(a.balances[coin]-paid);
+      a.pendingFees[coin]=round(due-paid);
+      state.reserves[a.bankLevel][coin]=round(state.reserves[a.bankLevel][coin]+paid);
+      paidAny=true;
+    }
+  }
+  a.taxPending = COIN_KEYS.some(k=>money(a.pendingFees[k])>0);
+  addLog(`${a.name} tentou regularizar taxas pendentes.${a.taxPending?' Ainda há pendência.':' Pendências quitadas.'}`);
+  saveState(); render();
+}
+function payPendingSelected(){
+  const a=getAccount(document.getElementById('annualAccount').value); if(!a){alert('Escolha uma conta.');return;} payPending(a.id);
+}
+function cancelSelectedAccount(){
+  const a=getAccount(document.getElementById('cancelAccount').value);
+  if(!a){alert('Escolha uma conta.');return;}
+  if(a.status==='cancelada'){alert('Conta já cancelada.');return;}
+  const mode=document.getElementById('cancelMode').value;
+  if(!confirm(`Cancelar a conta de ${a.name}?`)) return;
+  if(mode==='confiscate') confiscateAndCancel(a); else {a.status='cancelada'; addLog(`Conta de ${a.name} foi cancelada sem confisco do saldo registrado.`);}
+  saveState(); render();
+}
+function confiscateAndCancel(a){
+  const balances={...a.balances};
+  a.balances=defaultBalances();
+  a.status='cancelada';
+  a.taxPending=false;
+  a.pendingFees=defaultBalances();
+  const active = state.accounts.filter(x=>x.status==='ativa' && x.id!==a.id);
+  for(const coin of COIN_KEYS){
+    const amount=money(balances[coin]); if(amount<=0) continue;
+    const payout=round(amount*0.02);
+    const reserveTotal=round(amount-payout);
+    const perLevel=round(reserveTotal/6);
+    for(const lvl of Object.keys(BANK_LEVELS)) state.reserves[lvl][coin]=round(state.reserves[lvl][coin]+perLevel);
+    if(active.length){
+      const each=round(payout/active.length);
+      for(const acc of active){ acc.balances[coin]=round(acc.balances[coin]+each); }
+    }else{
+      const perLevelPayout=round(payout/6);
+      for(const lvl of Object.keys(BANK_LEVELS)) state.reserves[lvl][coin]=round(state.reserves[lvl][coin]+perLevelPayout);
+    }
+  }
+  addLog(`Conta de ${a.name} cancelada com confisco. 98% foi ao estoque dos bancos e 2% foi rateado entre contas ativas, quando havia contas elegíveis.`);
+}
+function exportBackup(){
+  saveState();
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='backup-banco-adnd25e.json';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+function importBackup(event){
+  const file=event.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{ const data=JSON.parse(reader.result); state={...defaultState(), ...data}; saveState(); loadState(); render(); addLog('Backup importado com sucesso.'); }
+    catch(e){ alert('Arquivo de backup inválido.'); }
+  };
+  reader.readAsText(file);
+}
+function resetAll(){
+  if(confirm('Tem certeza que deseja apagar todas as contas, reservas e registros deste app?')){
+    localStorage.removeItem(STORAGE_KEY); state=defaultState(); saveState(); render();
+  }
+}
+function escapeHtml(str){ return String(str).replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c])); }
+
+window.addEventListener('input', (e)=>{
+  if(['newBankLevel','depositAccount','depositCoin','depositAmount','withdrawAccount','withdrawLocation','withdrawPeriod','withdrawCoin','withdrawAmount','annualFeeAmount','annualFeeCoin','annualAccount'].includes(e.target.id)){
+    if(e.target.id==='annualFeeAmount'||e.target.id==='annualFeeCoin'){state.settings.annualFeeAmount=money(document.getElementById('annualFeeAmount').value);state.settings.annualFeeCoin=document.getElementById('annualFeeCoin').value;saveState();}
+    renderBankInfo(); renderDepositPreview(); renderWithdrawPreview(); renderAnnualPreview();
+  }
+});
+window.addEventListener('change', (e)=>{
+  if(['newBankLevel','depositAccount','depositCoin','withdrawAccount','withdrawLocation','withdrawPeriod','withdrawCoin','annualFeeAmount','annualFeeCoin','annualAccount'].includes(e.target.id)){
+    if(e.target.id==='annualFeeAmount'||e.target.id==='annualFeeCoin'){state.settings.annualFeeAmount=money(document.getElementById('annualFeeAmount').value);state.settings.annualFeeCoin=document.getElementById('annualFeeCoin').value;saveState();}
+    render();
+  }
+});
+
+loadState();
+render();
+</script>
+</body>
+</html>
